@@ -111,11 +111,10 @@ public class MainActivity extends Activity {
 				Files.List request = null;
 				
 				do {
-					try { 
+				    try { 
 						request = f1.list();
 						
 						// get only zip files from drive 
-						//request.setQ("trashed=false");
 						request.setQ("trashed=false and mimeType = 'application/zip'");
 						//com.google.api.services.drive.model.FileList fileList = request.execute();
 						FileList fileList = request.execute();
@@ -155,66 +154,45 @@ public class MainActivity extends Activity {
 										.buildGetRequest(new GenericUrl(tmp.getDownloadUrl()))
 										
 										.execute();
-								// gets the file's contents
+								// gets the zip file's contents
 								InputStream inputStream = resp.getContent();
 								
-								// stores the contents to the device's external storage
+								// stores the files in the zip to the device's external storage
 								try {
 								    Log.i("GoogleDriveProject", "beginning storage of file");
 								    byte[] buffer = new byte[2048];
-                                  	// to /Downloads							    
-//									final java.io.File file = new java.io.File(Environment
-//											.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), 
-//											tmp.getTitle());
-//									showToast("Downloading: " + tmp.getTitle() + " to " + Environment
-//											.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath());
 								    
 								    // TODO unzip inputstream here
 								    ZipInputStream zis = new ZipInputStream(inputStream);
+								    
 								    //get the zipped file list entry
 							        ZipEntry ze = zis.getNextEntry();
 							 
 							        // to /LaosTrainingApp
                                     String baseDir = Environment.getExternalStorageDirectory().getAbsolutePath();
-                                    //ZipEntry ze;
-                                    //for (ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()) {
                                     int count = 0;
                                     while (ze != null) {
                                         count++;
 							            Log.d("DEBUG", "Extracting: " + ze.getName() + "...");
-					                     // Extracted file will be saved with same file name that in
-					                     // zipped folder.
+					                     // Extracted file will be saved with same file name that's in the zip drive
 							            String fileName = ze.getName();
 							            String filePath = baseDir + "/" + getString(R.string.local_storage_folder) + "/" + fileName;
 							            java.io.File newFile = new java.io.File(filePath);
 	                                    showToast("Downloading: " + newFile.getName() + " to " + newFile.getPath());
 	                                    Log.e("downloadItemFromList", "Downloading: " + newFile.getName() + " to " + newFile.getPath());
 	                                    
-	                                    /*// handles the case where the zip entry is a folder
-	                                    if (ze.isDirectory()) {
-	                                        Log.d("DEBUG", "The Entry " + fileName + " is a directory..");
-	                                        newFile.mkdirs();
-	                                    } else {
-	                                        Log.d("DEBUG", "The Entry " + fileName + " is a file..");
-	                                        Log.d("DEBUG", "The path " + newFile.getPath() + " is a file..");
-	                                        FileOutputStream outputStream = new FileOutputStream(newFile);
-	                                        
-	                                        
-	                                        int len;
-	                                        while((len = zis.read(buffer)) != -1) {
-	                                            outputStream.write(buffer, 0, len);
-	                                        }
-	                                        outputStream.close();
-	                                    }*/
+	                                    // makes the parent folder for the files in the zip drive
 	                                    String parentPath = newFile.getParent();
 	                                    new java.io.File(parentPath).mkdirs();
 	                                    System.out.println("making parent directory: " + parentPath);
 	                                    
+	                                    // reads/writes each file 
 	                                    FileOutputStream fos = new FileOutputStream(newFile);
 	                                    int len;
                                         while((len = zis.read(buffer)) != -1) {
                                             fos.write(buffer, 0, len);
                                         }
+                                        fos.close();
                                         
 	                                    //zis.closeEntry();
 	                                    ze = zis.getNextEntry();
